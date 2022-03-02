@@ -2,7 +2,7 @@ use axum::{
     extract::{Extension, Path},
     http::StatusCode,
     response::IntoResponse,
-    routing::post,
+    routing,
     AddExtensionLayer, Json, Router,
 };
 use serde::{Deserialize, Serialize};
@@ -13,7 +13,8 @@ use std::net::SocketAddr;
 async fn main() {
     let client = reqwest::Client::new();
     let app = Router::new()
-        .route("/projects/:project_id/issues", post(issues_create))
+        .route("/projects/:project_id/issues", routing::post(issues_create))
+        .route("/projects/:project_id/issues/:issue_id", routing::get(issues_get))
         .layer(AddExtensionLayer::new(client));
 
     let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
@@ -71,7 +72,49 @@ async fn issues_create(
     Ok((StatusCode::CREATED, Json(issue)))
 }
 
-#[derive(Serialize, Deserialize)]
+async fn issues_get(
+    Path((project_id, issue_id)): Path<(String, String)>,
+    Extension(client): Extension<reqwest::Client>,
+) -> Result<impl IntoResponse, StatusCode> {
+    let resp: GetResponse = client
+        .get(format!(
+            "{}/rest/api/latest/issue/{}",
+            env::var("JIRA_HOST").unwrap(),
+            issue_id.clone(),
+        ))
+        .basic_auth(
+            env::var("JIRA_USER").unwrap(),
+            Some(env::var("JIRA_PASS").unwrap()),
+        )
+        .send()
+        .await
+        .unwrap()
+        .json()
+        .await
+        .unwrap();
+
+    let issue = Issue {
+        name: Some(format!("projects/{}/issues/{}", project_id, resp.key)),
+        title: resp.fields.summary,
+        body: Option::from(resp.fields.description),
+        owner: None,
+        assignee: Option::from(resp.fields.assignee.name),
+        labels: Option::from(resp.fields.labels),
+    };
+
+    Ok((StatusCode::OK, Json(issue)))
+}
+
+#[derive(Deserialize)]
+struct GetResponse {
+    id: String,
+    key: String,
+    #[serde(rename = "self")]
+    url: String,
+    fields: GetFields,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
 struct Issue {
     name: Option<String>,
     title: String,
@@ -86,6 +129,16 @@ struct CreateIssue {
     fields: Fields,
 }
 
+#[derive(Deserialize)]
+struct GetFields {
+    project: Project,
+    issuetype: IssueType,
+    summary: String,
+    description: String,
+    assignee: Assignee,
+    labels: Vec<String>,
+}
+
 #[derive(Serialize)]
 struct Fields {
     project: Project,
@@ -94,12 +147,23 @@ struct Fields {
     description: String,
 }
 
-#[derive(Serialize)]
+#[derive(Deserialize)]
+struct Assignee {
+    #[serde(rename = "self")]
+    key: String,
+    name: String,
+    #[serde(rename = "emailAddress")]
+    email_address: String,
+    #[serde(rename = "displayName")]
+    display_name: String,
+}
+
+#[derive(Serialize, Deserialize)]
 struct Project {
     key: String,
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Deserialize)]
 struct IssueType {
     name: String,
 }
