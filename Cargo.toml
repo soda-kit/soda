@@ -2,4 +2,5 @@
 
 members = [
     "issue",
+    "http",
 ]

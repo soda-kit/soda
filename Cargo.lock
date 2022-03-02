@@ -30,7 +30,7 @@ dependencies = [
  "bitflags",
  "bytes",
  "futures-util",
- "http",
+ "http 0.2.6",
  "http-body",
  "hyper",
  "matchit",
@@ -59,7 +59,7 @@ dependencies = [
  "async-trait",
  "bytes",
  "futures-util",
- "http",
+ "http 0.2.6",
  "http-body",
  "mime",
 ]
@@ -215,7 +215,7 @@ dependencies = [
  "futures-core",
  "futures-sink",
  "futures-util",
- "http",
+ "http 0.2.6",
  "indexmap",
  "slab",
  "tokio",
@@ -240,6 +240,18 @@ dependencies = [
 
 [[package]]
 name = "http"
+version = "0.1.0"
+dependencies = [
+ "axum",
+ "issue",
+ "reqwest",
+ "serde",
+ "serde_json",
+ "tokio",
+]
+
+[[package]]
+name = "http"
 version = "0.2.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "31f4c6746584866f0feabcc69893c5b51beef3831656a968ed7ae254cdc4fd03"
@@ -256,7 +268,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1ff4f84919677303da5f147645dbea6b1881f368d03ac84e1dc09031ebd7b2c6"
 dependencies = [
  "bytes",
- "http",
+ "http 0.2.6",
  "pin-project-lite",
 ]
 
@@ -289,7 +301,7 @@ dependencies = [
  "futures-core",
  "futures-util",
  "h2",
- "http",
+ "http 0.2.6",
  "http-body",
  "httparse",
  "httpdate",
@@ -644,7 +656,7 @@ dependencies = [
  "futures-core",
  "futures-util",
  "h2",
- "http",
+ "http 0.2.6",
  "http-body",
  "hyper",
  "hyper-tls",
@@ -929,7 +941,7 @@ dependencies = [
  "bytes",
  "futures-core",
  "futures-util",
- "http",
+ "http 0.2.6",
  "http-body",
  "http-range-header",
  "pin-project-lite",
